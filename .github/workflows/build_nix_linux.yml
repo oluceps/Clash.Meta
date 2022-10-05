@@ -1,0 +1,19 @@
+name: "Build x86_64-linux on Ubuntu"
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3.0.2
+    - uses: cachix/install-nix-action@v17
+      with:
+        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.12.0pre20220908_c8e8eea/install
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+          system-features = nixos-test benchmark big-parallel kvm recursive-nix
+    - name: build x86_64-linux package
+      run: nix build .# 
+  
