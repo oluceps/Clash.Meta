@@ -107,7 +107,7 @@ func UpdateProxies(newProxies map[string]C.Proxy, newProviders map[string]provid
 
 func UpdateSniffer(dispatcher *sniffer.SnifferDispatcher) {
 	configMux.Lock()
-	sniffer.Dispatcher = *dispatcher
+	sniffer.Dispatcher = dispatcher
 	sniffingEnable = true
 	configMux.Unlock()
 }
@@ -331,9 +331,18 @@ func handleTCPConn(connCtx C.ConnContext) {
 		return
 	}
 
+	dialMetadata := metadata
+	if len(metadata.Host) > 0 {
+		if node := resolver.DefaultHosts.Search(metadata.Host); node != nil {
+			dialMetadata.DstIP = node.Data
+			dialMetadata.DNSMode = C.DNSHosts
+			dialMetadata = dialMetadata.Pure()
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), C.DefaultTCPTimeout)
 	defer cancel()
-	remoteConn, err := proxy.DialContext(ctx, metadata)
+	remoteConn, err := proxy.DialContext(ctx, dialMetadata)
 	if err != nil {
 		if rule == nil {
 			log.Warnln("[TCP] dial %s to %s error: %s", proxy.Name(), metadata.RemoteAddress(), err.Error())
