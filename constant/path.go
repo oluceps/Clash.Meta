@@ -1,6 +1,7 @@
 package constant
 
 import (
+	"github.com/samber/lo"
 	"os"
 	P "path"
 	"path/filepath"
@@ -73,5 +74,7 @@ func (p *path) OldCache() string {
 }
 
 func (p *path) Cache() string {
-	return P.Join(p.homeDir, "cache.db")
+	cacheEnv := os.Getenv("CLASH_CACHE_HOME")
+	cacheHome, _ := lo.Coalesce(cacheEnv, p.homeDir)
+	return P.Join(cacheHome, "cache.db")
 }
